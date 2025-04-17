@@ -59,12 +59,15 @@ export default function App() {
 
   const handleSpotifyLogin = () => {
     const authUrl = new URL("https://accounts.spotify.com/authorize");
-    console.log("▶️ Using client ID:", clientId); // NEW line
+    console.log("▶️ Using client ID:", clientId); // Debug: verify client ID
     authUrl.searchParams.set("client_id", clientId);
     authUrl.searchParams.set("response_type", "code");
     authUrl.searchParams.set("redirect_uri", redirectUri);
     authUrl.searchParams.set("scope", scope);
-    window.location = authUrl.toString();
+
+    const finalUrl = authUrl.toString();
+    console.log("🔗 Redirecting to Spotify:", finalUrl); // Debug: verify URL
+    window.location = finalUrl;
   };
 
   return (
