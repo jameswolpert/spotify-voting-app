@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 
-const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
+const clientId = "b8a2137f3e61400682ed3d2f8f001016";
 const redirectUri = "https://spotify-voting-app.vercel.app/admin";
 const scope = "playlist-read-private";
 
