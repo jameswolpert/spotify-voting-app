@@ -1,7 +1,6 @@
-
 import { useEffect, useState } from "react";
 
-const clientId = "b8a2137f3e61400682ed3d2f8f001016";
+const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
 const redirectUri = "https://spotify-voting-app.vercel.app/admin";
 const scope = "playlist-read-private";
 
@@ -10,34 +9,50 @@ export default function App() {
   const [playlists, setPlaylists] = useState([]);
   const [error, setError] = useState("");
 
+  // Check for stored token or code in URL
   useEffect(() => {
-    const hashParams = new URLSearchParams(window.location.search);
-    const code = hashParams.get("code");
+    const storedToken = localStorage.getItem("spotify_access_token");
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get("code");
 
-    if (code && !accessToken) {
+    if (storedToken) {
+      setAccessToken(storedToken);
+    } else if (code) {
       fetch("/api/callback?code=" + code)
         .then((res) => res.json())
         .then((data) => {
-          setAccessToken(data.access_token);
-          window.history.replaceState({}, document.title, "/admin");
+          if (data.access_token) {
+            setAccessToken(data.access_token);
+            localStorage.setItem("spotify_access_token", data.access_token);
+            window.history.replaceState({}, document.title, "/admin");
+          } else {
+            throw new Error("No access token returned.");
+          }
         })
         .catch((err) => {
           console.error("Callback error:", err);
-          setError("Failed to complete Spotify login.");
+          setError("⚠️ Failed to complete Spotify login.");
         });
     }
-  }, [accessToken]);
+  }, []);
 
+  // Fetch playlists
   useEffect(() => {
     if (accessToken) {
       fetch("https://api.spotify.com/v1/me/playlists", {
         headers: { Authorization: "Bearer " + accessToken },
       })
         .then((res) => res.json())
-        .then((data) => setPlaylists(data.items || []))
+        .then((data) => {
+          if (data.items) {
+            setPlaylists(data.items);
+          } else {
+            setError("⚠️ Failed to load playlists.");
+          }
+        })
         .catch((err) => {
           console.error("Fetch error:", err);
-          setError("Failed to load playlists.");
+          setError("⚠️ Failed to load playlists.");
         });
     }
   }, [accessToken]);
@@ -77,7 +92,7 @@ export default function App() {
         </div>
       )}
 
-      {error && <p className="text-red-400 mt-4">⚠️ {error}</p>}
+      {error && <p className="text-red-400 mt-4">{error}</p>}
     </div>
   );
 }
